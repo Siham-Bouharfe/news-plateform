@@ -133,7 +133,7 @@
       "gridPos": { "x": 12, "y": 26, "w": 12, "h": 8 },
       "targets": [{
         "datasource": "PostgreSQL",
-        "rawSql": "SELECT title AS \"Titre\", source AS \"Source\", category AS \"Catégorie\", published_at AS \"Date\" FROM articles WHERE published_at IS NOT NULL ORDER BY published_at DESC LIMIT 10",
+        "rawSql": "SELECT title AS \"Titre\", source AS \"Source\", category AS \"Catégorie\", scraped_at AS \"Date\" FROM articles ORDER BY scraped_at DESC LIMIT 10",
         "format": "table"
       }]
     }
