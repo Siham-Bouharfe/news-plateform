@@ -1,0 +1,142 @@
+{
+  "title": "News Platform — Tendances Médias",
+  "uid": "news-trends-001",
+  "version": 1,
+  "schemaVersion": 38,
+  "refresh": "5m",
+  "time": { "from": "now-7d", "to": "now" },
+  "tags": ["news", "media", "trends"],
+  "panels": [
+
+    {
+      "id": 1,
+      "title": "Articles collectés par jour",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [{
+        "datasource": "PostgreSQL",
+        "rawSql": "SELECT DATE(scraped_at) AS time, COUNT(*) AS \"Articles\" FROM articles WHERE $__timeFilter(scraped_at) GROUP BY DATE(scraped_at) ORDER BY DATE(scraped_at)",
+        "format": "time_series"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2, "fillOpacity": 15 }
+        }
+      }
+    },
+
+    {
+      "id": 2,
+      "title": "Articles par source (aujourd'hui)",
+      "type": "piechart",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [{
+        "datasource": "PostgreSQL",
+        "rawSql": "SELECT source AS \"Source\", article_count AS \"Articles\" FROM articles_by_source WHERE report_date = CURRENT_DATE ORDER BY article_count DESC",
+        "format": "table"
+      }],
+      "options": {
+        "reduceOptions": { "calcs": ["sum"] },
+        "pieType": "donut",
+        "legendDisplayMode": "table"
+      }
+    },
+
+    {
+      "id": 3,
+      "title": "Top 20 mots-clés (7 derniers jours)",
+      "type": "barchart",
+      "gridPos": { "x": 0, "y": 8, "w": 16, "h": 10 },
+      "targets": [{
+        "datasource": "PostgreSQL",
+        "rawSql": "SELECT keyword AS \"Mot-clé\", SUM(occurrence) AS \"Occurrences\" FROM daily_trends WHERE trend_date >= CURRENT_DATE - INTERVAL '7 days' GROUP BY keyword ORDER BY \"Occurrences\" DESC LIMIT 20",
+        "format": "table"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "continuous-BlPu" },
+          "custom": { "fillOpacity": 80 }
+        }
+      },
+      "options": {
+        "xField": "Mot-clé",
+        "orientation": "horizontal"
+      }
+    },
+
+    {
+      "id": 4,
+      "title": "Score qualité données",
+      "type": "gauge",
+      "gridPos": { "x": 16, "y": 8, "w": 8, "h": 10 },
+      "targets": [{
+        "datasource": "PostgreSQL",
+        "rawSql": "SELECT COALESCE(ROUND(quality_rate::numeric * 100, 1), 0) AS \"Score\" FROM data_quality_log ORDER BY check_date DESC LIMIT 1",
+        "format": "table"
+      }],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "minVizHeight": 75,
+        "showThresholdLabels": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0, "max": 100,
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "red" },
+              { "value": 70, "color": "yellow" },
+              { "value": 90, "color": "green" }
+            ]
+          }
+        }
+      }
+    },
+
+    {
+      "id": 5,
+      "title": "Volumes par source (7 jours)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 18, "w": 24, "h": 8 },
+      "targets": [{
+        "datasource": "PostgreSQL",
+        "rawSql": "SELECT report_date AS time, source, article_count FROM articles_by_source WHERE $__timeFilter(report_date) ORDER BY report_date",
+        "format": "time_series"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        }
+      }
+    },
+
+    {
+      "id": 6,
+      "title": "Tendances temps réel (dernière heure)",
+      "type": "table",
+      "gridPos": { "x": 0, "y": 26, "w": 12, "h": 8 },
+      "targets": [{
+        "datasource": "PostgreSQL",
+        "rawSql": "SELECT keyword AS \"Mot-clé\", SUM(occurrence) AS \"Occurrences\", source AS \"Source\" FROM daily_trends WHERE trend_date = CURRENT_DATE GROUP BY keyword, source ORDER BY \"Occurrences\" DESC LIMIT 15",
+        "format": "table"
+      }],
+      "options": { "sortBy": [{ "displayName": "Occurrences", "desc": true }] }
+    },
+
+    {
+      "id": 7,
+      "title": "Articles récents",
+      "type": "table",
+      "gridPos": { "x": 12, "y": 26, "w": 12, "h": 8 },
+      "targets": [{
+        "datasource": "PostgreSQL",
+        "rawSql": "SELECT title AS \"Titre\", source AS \"Source\", category AS \"Catégorie\", published_at AS \"Date\" FROM articles WHERE published_at IS NOT NULL ORDER BY published_at DESC LIMIT 10",
+        "format": "table"
+      }]
+    }
+
+  ]
+}
